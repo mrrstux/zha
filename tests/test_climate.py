@@ -15,6 +15,8 @@ from zhaquirks.sinope.thermostat import SinopeTechnologiesThermostatCluster
 import zhaquirks.tuya.ts0601_trv
 import zigpy.profiles
 import zigpy.quirks
+from zigpy.quirks.registry import DeviceRegistry
+from zigpy.quirks.v2 import QuirkBuilder
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
@@ -28,6 +30,7 @@ from tests.common import (
     get_entity,
     join_zigpy_device,
     send_attributes_report,
+    zigpy_device_from_json,
 )
 from zha.application import Platform
 from zha.application.const import (
@@ -44,6 +47,7 @@ from zha.application.platforms.climate import (
     Thermostat as ThermostatEntity,
 )
 from zha.application.platforms.climate.const import FanState
+from zha.application.platforms.number import NumberConfigurationEntity
 from zha.application.platforms.sensor import (
     Sensor,
     SinopeHVACAction,
@@ -1463,3 +1467,75 @@ async def test_set_zonnsmart_operation_mode(zha_gateway: Gateway) -> None:
     await send_attributes_report(zha_gateway, thrm_cluster, {"operation_preset": 4})
 
     assert entity.state[ATTR_PRESET_MODE] == "frost protect"
+
+
+async def test_thermostat_default_local_temperature_calibration_config(
+    zha_gateway: Gateway,
+) -> None:
+    """Test that a default local temperature calibration config gets attached to a thermostat entity."""
+    registry = DeviceRegistry()
+
+    zigpy_dev = registry.get_device(
+        await zigpy_device_from_json(
+            zha_gateway.application_controller,
+            "data/devices/generic-thermostat.json",
+        )
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+    assert zha_device.model == "Generic-Thermostat"
+    assert zha_device.manufacturer == "TEST"
+
+    local_temperature_calibration_entity = zha_device.platform_entities[
+        (Platform.NUMBER, "21:ab:26:11:10:1d:55:3c-1-513-local_temperature_calibration")
+    ]
+    assert local_temperature_calibration_entity
+    assert isinstance(local_temperature_calibration_entity, NumberConfigurationEntity)
+    assert local_temperature_calibration_entity.info_object.min_value == -2.5
+    assert local_temperature_calibration_entity.info_object.max_value == 2.5
+    assert local_temperature_calibration_entity.info_object.step == 0.1
+    assert local_temperature_calibration_entity.info_object.multiplier == 0.1
+
+
+async def test_thermostat_quirkv2_local_temperature_calibration_config_overwrite(
+    zha_gateway: Gateway,
+) -> None:
+    """Test that a quirk v2 local temperature calibration config overwrites the default one."""
+    registry = DeviceRegistry()
+
+    (
+        QuirkBuilder("TEST", "Generic-Thermostat")
+        # Local temperature calibration.
+        .number(
+            Thermostat.AttributeDefs.local_temperature_calibration.name,
+            zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
+            min_value=-5,
+            max_value=5,
+            step=0.1,
+            multiplier=0.1,
+            translation_key="local_temperature_calibration",
+            fallback_name="Local temperature offset",
+        )
+        .add_to_registry()
+    )
+
+    zigpy_dev = registry.get_device(
+        await zigpy_device_from_json(
+            zha_gateway.application_controller,
+            "data/devices/generic-thermostat.json",
+        )
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+    assert zha_device.model == "Generic-Thermostat"
+    assert zha_device.manufacturer == "TEST"
+
+    local_temperature_calibration_entity = zha_device.platform_entities[
+        (Platform.NUMBER, "21:ab:26:11:10:1d:55:3c-1-513-local_temperature_calibration")
+    ]
+    assert local_temperature_calibration_entity
+    assert isinstance(local_temperature_calibration_entity, NumberConfigurationEntity)
+    assert local_temperature_calibration_entity.info_object.min_value == -5.0
+    assert local_temperature_calibration_entity.info_object.max_value == 5.0
+    assert local_temperature_calibration_entity.info_object.step == 0.1
+    assert local_temperature_calibration_entity.info_object.multiplier == 0.1

@@ -335,7 +335,7 @@ class DeviceProbe:
                 endpoint.async_new_entity(
                     platform=platform,
                     entity_class=entity_class,
-                    unique_id=endpoint.unique_id,
+                    unique_id=f"{endpoint.unique_id}-{cluster.cluster_id}",
                     cluster_handlers=[cluster_handler],
                     entity_metadata=entity_metadata,
                 )

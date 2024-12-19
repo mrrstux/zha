@@ -15,7 +15,6 @@ from zhaquirks.sinope.thermostat import SinopeTechnologiesThermostatCluster
 import zhaquirks.tuya.ts0601_trv
 import zigpy.profiles
 import zigpy.quirks
-from zigpy.quirks.registry import DeviceRegistry
 from zigpy.quirks.v2 import QuirkBuilder
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
@@ -30,7 +29,6 @@ from tests.common import (
     get_entity,
     join_zigpy_device,
     send_attributes_report,
-    zigpy_device_from_json,
 )
 from zha.application import Platform
 from zha.application.const import (
@@ -183,6 +181,7 @@ ZCL_ATTR_PLUG = {
     "abs_max_cool_setpoint_limit": 4000,
     "ctrl_sequence_of_oper": Thermostat.ControlSequenceOfOperation.Cooling_and_Heating,
     "local_temperature": None,
+    "local_temperature_calibration": 0,
     "max_cool_setpoint_limit": 3900,
     "max_heat_setpoint_limit": 2900,
     "min_cool_setpoint_limit": 2100,
@@ -1473,21 +1472,14 @@ async def test_thermostat_default_local_temperature_calibration_config(
     zha_gateway: Gateway,
 ) -> None:
     """Test that a default local temperature calibration config gets attached to a thermostat entity."""
-    registry = DeviceRegistry()
 
-    zigpy_dev = registry.get_device(
-        await zigpy_device_from_json(
-            zha_gateway.application_controller,
-            "data/devices/generic-thermostat.json",
-        )
-    )
+    zha_device = await device_climate_mock(zha_gateway, CLIMATE)
 
-    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
-    assert zha_device.model == "Generic-Thermostat"
-    assert zha_device.manufacturer == "TEST"
+    assert zha_device.model == "FakeModel"
+    assert zha_device.manufacturer == "unk_manufacturer"
 
     local_temperature_calibration_entity = zha_device.platform_entities[
-        (Platform.NUMBER, "21:ab:26:11:10:1d:55:3c-1-513-local_temperature_calibration")
+        (Platform.NUMBER, "00:0d:6f:00:0a:90:69:e7-1-513-local_temperature_calibration")
     ]
     assert local_temperature_calibration_entity
     assert isinstance(local_temperature_calibration_entity, NumberConfigurationEntity)
@@ -1501,10 +1493,15 @@ async def test_thermostat_quirkv2_local_temperature_calibration_config_overwrite
     zha_gateway: Gateway,
 ) -> None:
     """Test that a quirk v2 local temperature calibration config overwrites the default one."""
-    registry = DeviceRegistry()
+
+    zigpy_device = create_mock_zigpy_device(
+        zha_gateway, CLIMATE, manufacturer="unk_manufacturer", model="FakeModel"
+    )
+    zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
+    zigpy_device.endpoints[1].thermostat.PLUGGED_ATTR_READS = ZCL_ATTR_PLUG
 
     (
-        QuirkBuilder("TEST", "Generic-Thermostat")
+        QuirkBuilder("unk_manufacturer", "FakeModel", zigpy.quirks._DEVICE_REGISTRY)
         # Local temperature calibration.
         .number(
             Thermostat.AttributeDefs.local_temperature_calibration.name,
@@ -1519,19 +1516,14 @@ async def test_thermostat_quirkv2_local_temperature_calibration_config_overwrite
         .add_to_registry()
     )
 
-    zigpy_dev = registry.get_device(
-        await zigpy_device_from_json(
-            zha_gateway.application_controller,
-            "data/devices/generic-thermostat.json",
-        )
-    )
+    zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_device)
 
-    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
-    assert zha_device.model == "Generic-Thermostat"
-    assert zha_device.manufacturer == "TEST"
+    assert zha_device.model == "FakeModel"
+    assert zha_device.manufacturer == "unk_manufacturer"
 
     local_temperature_calibration_entity = zha_device.platform_entities[
-        (Platform.NUMBER, "21:ab:26:11:10:1d:55:3c-1-513-local_temperature_calibration")
+        (Platform.NUMBER, "00:0d:6f:00:0a:90:69:e7-1-513-local_temperature_calibration")
     ]
     assert local_temperature_calibration_entity
     assert isinstance(local_temperature_calibration_entity, NumberConfigurationEntity)

@@ -692,6 +692,30 @@ class PolledElectricalMeasurement(ElectricalMeasurement):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSActivePowerPhB(PolledElectricalMeasurement):
+    """RMS active power phase B measurement."""
+
+    _attribute_name = "active_power_ph_b"
+    _unique_id_suffix = "active_power_ph_b"
+    _attr_translation_key: str = "active_power_ph_b"
+    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
+    _skip_creation_if_no_attr_cache = True
+    _attr_max_attribute_name = "active_power_max_ph_b"
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSActivePowerPhC(PolledElectricalMeasurement):
+    """RMS active power phase C measurement."""
+
+    _attribute_name = "active_power_ph_c"
+    _unique_id_suffix = "active_power_ph_c"
+    _attr_translation_key: str = "active_power_ph_c"
+    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
+    _skip_creation_if_no_attr_cache = True
+    _attr_max_attribute_name = "active_power_max_ph_c"
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurementApparentPower(PolledElectricalMeasurement):
     """Apparent power measurement."""
 
@@ -717,7 +741,7 @@ class ElectricalMeasurementRMSCurrent(PolledElectricalMeasurement):
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurementRMSCurrentPhB(ElectricalMeasurementRMSCurrent):
-    """RMS current measurement."""
+    """RMS current phase B measurement."""
 
     _attribute_name = "rms_current_ph_b"
     _unique_id_suffix = "rms_current_ph_b"
@@ -728,7 +752,7 @@ class ElectricalMeasurementRMSCurrentPhB(ElectricalMeasurementRMSCurrent):
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurementRMSCurrentPhC(ElectricalMeasurementRMSCurrent):
-    """RMS current measurement."""
+    """RMS current phase C measurement."""
 
     _attribute_name: str = "rms_current_ph_c"
     _unique_id_suffix: str = "rms_current_ph_c"
@@ -747,6 +771,28 @@ class ElectricalMeasurementRMSVoltage(PolledElectricalMeasurement):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _div_mul_prefix = "ac_voltage"
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSVoltagePhB(ElectricalMeasurementRMSVoltage):
+    """RMS voltage phase B measurement."""
+
+    _attribute_name = "rms_voltage_ph_b"
+    _unique_id_suffix = "rms_voltage_ph_b"
+    _attr_translation_key: str = "rms_voltage_ph_b"
+    _skip_creation_if_no_attr_cache = True
+    _attr_max_attribute_name = "rms_voltage_max_ph_b"
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSVoltagePhC(ElectricalMeasurementRMSVoltage):
+    """RMS voltage phase C measurement."""
+
+    _attribute_name = "rms_voltage_ph_c"
+    _unique_id_suffix = "rms_voltage_ph_c"
+    _attr_translation_key: str = "rms_voltage_ph_c"
+    _skip_creation_if_no_attr_cache = True
+    _attr_max_attribute_name = "rms_voltage_max_ph_c"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -772,6 +818,28 @@ class ElectricalMeasurementPowerFactor(PolledElectricalMeasurement):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_native_unit_of_measurement = PERCENTAGE
     _div_mul_prefix = None
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementPowerFactorPhB(ElectricalMeasurementPowerFactor):
+    """Power factor phase B measurement."""
+
+    _attribute_name = "power_factor_ph_b"
+    _unique_id_suffix = "power_factor_ph_b"
+    _attr_translation_key: str = "power_factor_ph_b"
+    _skip_creation_if_no_attr_cache = True
+    _attr_max_attribute_name = "power_factor_max_ph_b"
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementPowerFactorPhC(ElectricalMeasurementPowerFactor):
+    """Power factor phase C measurement."""
+
+    _attribute_name = "power_factor_ph_c"
+    _unique_id_suffix = "power_factor_ph_c"
+    _attr_translation_key: str = "power_factor_ph_c"
+    _skip_creation_if_no_attr_cache = True
+    _attr_max_attribute_name = "power_factor_max_ph_c"
 
 
 @MULTI_MATCH(

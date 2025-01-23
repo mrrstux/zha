@@ -1147,7 +1147,11 @@ async def test_elec_measurement_skip_unsupported_attribute(
 
     all_attrs = {
         "active_power",
+        "active_power_ph_b",
+        "active_power_ph_c",
         "active_power_max",
+        "active_power_max_ph_b",
+        "active_power_max_ph_c",
         "apparent_power",
         "rms_current",
         "rms_current_ph_b",
@@ -1156,8 +1160,14 @@ async def test_elec_measurement_skip_unsupported_attribute(
         "rms_current_max_ph_b",
         "rms_current_max_ph_c",
         "rms_voltage",
+        "rms_voltage_ph_b",
+        "rms_voltage_ph_c",
         "rms_voltage_max",
+        "rms_voltage_max_ph_b",
+        "rms_voltage_max_ph_c",
         "power_factor",
+        "power_factor_ph_b",
+        "power_factor_ph_c",
         "ac_frequency",
         "ac_frequency_max",
     }

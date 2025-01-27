@@ -31,6 +31,7 @@ from zha.zigbee.cluster_handlers.const import (
     IKEA_AIR_PURIFIER_CLUSTER,
     IKEA_REMOTE_CLUSTER,
     INOVELLI_CLUSTER,
+    LEGRAND_CABLE_OUTLET_CLUSTER,
     OSRAM_BUTTON_CLUSTER,
     PHILIPS_CONTACT_CLUSTER,
     PHILLIPS_REMOTE_CLUSTER,
@@ -578,3 +579,9 @@ class SinopeManufacturerClusterHandler(ClusterHandler):
         )
 
         return cluster.endpoint.model in switches
+
+
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(LEGRAND_CABLE_OUTLET_CLUSTER)
+@registries.CLUSTER_HANDLER_REGISTRY.register(LEGRAND_CABLE_OUTLET_CLUSTER)
+class LegrandCableOutletClusterHandler(ClusterHandler):
+    """Legrand cable outlet cluster handler."""

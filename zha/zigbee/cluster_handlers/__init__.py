@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine, Iterator
 import contextlib
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 import functools
 import logging
@@ -489,7 +490,7 @@ class ClusterHandler(LogMixin, EventBase):
     def cluster_command(self, tsn, command_id, args) -> None:
         """Handle commands received to this cluster."""
 
-    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, timestamp: datetime) -> None:
         """Handle attribute updates on this cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(
@@ -604,7 +605,14 @@ class ClusterHandler(LogMixin, EventBase):
             rest = rest[CLUSTER_READS_PER_REQ:]
         return result
 
-    get_attributes = functools.partialmethod(_get_attributes, False)
+    async def get_attributes(
+        self,
+        attributes: list[str],
+        from_cache: bool = True,
+        only_cache: bool = True,
+    ) -> dict[int | str, Any]:
+        """Get the values for a list of attributes and raise no exceptions."""
+        return await self._get_attributes(False, attributes, from_cache, only_cache)
 
     async def write_attributes_safe(
         self, attributes: dict[str, Any], manufacturer: int | None = None
@@ -697,7 +705,7 @@ class ZDOClusterHandler(LogMixin):
 class ClientClusterHandler(ClusterHandler):
     """ClusterHandler for Zigbee client (output) clusters."""
 
-    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, timestamp: datetime) -> None:
         """Handle an attribute updated on this cluster."""
         super().attribute_updated(attrid, value, timestamp)
 

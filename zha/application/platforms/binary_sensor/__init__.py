@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import functools
 import logging
+import typing
 from typing import TYPE_CHECKING
 
 from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
@@ -59,6 +60,7 @@ class BinarySensor(PlatformEntity):
 
     _attr_device_class: BinarySensorDeviceClass | None
     _attribute_name: str
+    _attribute_converter: typing.Callable[[typing.Any], typing.Any] | None = None
     PLATFORM: Platform = Platform.BINARY_SENSOR
 
     def __init__(
@@ -82,6 +84,8 @@ class BinarySensor(PlatformEntity):
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
         self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.attribute_converter is not None:
+            self._attribute_converter = entity_metadata.attribute_converter
         if entity_metadata.device_class is not None:
             self._attr_device_class = validate_device_class(
                 BinarySensorDeviceClass,
@@ -113,6 +117,8 @@ class BinarySensor(PlatformEntity):
         )
         if raw_state is None:
             return False
+        if self._attribute_converter:
+            return self._attribute_converter(raw_state)
         return self.parse(raw_state)
 
     def handle_cluster_handler_attribute_updated(

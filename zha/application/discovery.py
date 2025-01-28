@@ -338,6 +338,7 @@ class DeviceProbe:
                     unique_id=f"{endpoint.unique_id}-{cluster.cluster_id}",
                     cluster_handlers=[cluster_handler],
                     entity_metadata=entity_metadata,
+                    previous_unique_id=endpoint.unique_id,
                 )
 
                 _LOGGER.debug(
@@ -432,8 +433,15 @@ class EndpointProbe:
             if platform_entity_class is None:
                 return
             endpoint.claim_cluster_handlers(claimed)
+
+            cluster_id = claimed[0].cluster.cluster_id
+
             endpoint.async_new_entity(
-                platform, platform_entity_class, unique_id, claimed
+                platform,
+                platform_entity_class,
+                f"{endpoint.unique_id}-{cluster_id}",
+                claimed,
+                previous_unique_id=endpoint.unique_id,
             )
 
     def discover_by_cluster_id(self, endpoint: Endpoint) -> None:
@@ -561,17 +569,20 @@ class EndpointProbe:
                     [ch.name for ch in entity_and_handler.claimed_cluster_handlers],
                 )
 
+                first_ch = entity_and_handler.claimed_cluster_handlers[0]
+
                 if platform == cmpt_by_dev_type:
                     # for well known device types,
                     # like thermostats we'll take only 1st class
                     endpoint.async_new_entity(
                         platform,
                         entity_and_handler.entity_class,
-                        endpoint.unique_id,
+                        f"{endpoint.unique_id}-{first_ch.cluster.cluster_id}",
                         entity_and_handler.claimed_cluster_handlers,
+                        previous_unique_id=endpoint.unique_id,
                     )
                     break
-                first_ch = entity_and_handler.claimed_cluster_handlers[0]
+
                 endpoint.async_new_entity(
                     platform,
                     entity_and_handler.entity_class,

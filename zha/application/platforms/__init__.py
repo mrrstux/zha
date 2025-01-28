@@ -15,6 +15,7 @@ from zigpy.quirks.v2 import EntityMetadata, EntityType
 from zigpy.types.named import EUI64
 
 from zha.application import Platform
+from zha.application.const import ENTITY_PREVIOUS_UNIQUE_ID
 from zha.const import STATE_CHANGED
 from zha.debounce import Debouncer
 from zha.event import EventBase
@@ -50,6 +51,7 @@ class BaseEntityInfo:
 
     fallback_name: str
     unique_id: str
+    previous_unique_id: str | None
     platform: str
     class_name: str
     translation_key: str | None
@@ -118,11 +120,12 @@ class BaseEntity(LogMixin, EventBase):
     _attr_state_class: str | None
     _attr_enabled: bool = True
 
-    def __init__(self, unique_id: str) -> None:
+    def __init__(self, unique_id: str, previous_unique_id: str | None = None) -> None:
         """Initialize the platform entity."""
         super().__init__()
 
         self._unique_id: str = unique_id
+        self._previous_unique_id: str | None = previous_unique_id
 
         self.__previous_state: Any = None
         self._tracked_tasks: list[asyncio.Task] = []
@@ -189,6 +192,12 @@ class BaseEntity(LogMixin, EventBase):
         """Return the unique id."""
         return self._unique_id
 
+    @final
+    @property
+    def previous_unique_id(self) -> str | None:
+        """Return the previous unique id, if any."""
+        return self._previous_unique_id
+
     @cached_property
     def identifiers(self) -> BaseIdentifiers:
         """Return a dict with the information necessary to identify this entity."""
@@ -203,6 +212,7 @@ class BaseEntity(LogMixin, EventBase):
 
         return BaseEntityInfo(
             unique_id=self.unique_id,
+            previous_unique_id=self.previous_unique_id,
             platform=self.PLATFORM,
             class_name=self.__class__.__name__,
             fallback_name=self.fallback_name,
@@ -299,6 +309,12 @@ class PlatformEntity(BaseEntity):
         if self._unique_id_suffix:
             unique_id += f"-{self._unique_id_suffix}"
 
+            if ENTITY_PREVIOUS_UNIQUE_ID in kwargs:
+                previous_unique_id = kwargs[ENTITY_PREVIOUS_UNIQUE_ID]
+                if previous_unique_id is not None:
+                    previous_unique_id += f"-{self._unique_id_suffix}"
+                    kwargs[ENTITY_PREVIOUS_UNIQUE_ID] = previous_unique_id
+
         # XXX: The ordering here matters: `_init_from_quirks_metadata` affects how
         # the `unique_id` is computed!
         super().__init__(unique_id=unique_id, **kwargs)
@@ -309,7 +325,7 @@ class PlatformEntity(BaseEntity):
             self.cluster_handlers[cluster_handler.name] = cluster_handler
         self._device: Device = device
         self._endpoint = endpoint
-        # we double create these in discovery tests because we reissue the create calls to count and prove them out
+
         if (self.PLATFORM, self.unique_id) in self._device.platform_entities:
             _LOGGER.warning(
                 "Duplicate entity detected - unique id %r already exists: %r. Replacing with %r",

@@ -15,6 +15,7 @@ from zigpy.profiles import zha
 import zigpy.profiles.zha
 from zigpy.quirks import CustomCluster, DeviceRegistry, get_device
 from zigpy.quirks.v2 import CustomDeviceV2, QuirkBuilder, ReportingConfig
+from zigpy.quirks.v2.homeassistant import UnitOfMass
 from zigpy.quirks.v2.homeassistant.sensor import (
     SensorDeviceClass as SensorDeviceClassV2,
 )
@@ -38,7 +39,7 @@ from zha.application import Platform
 from zha.application.const import ZCL_INIT_ATTRS, ZHA_CLUSTER_HANDLER_READS_PER_REQ
 from zha.application.gateway import Gateway
 from zha.application.platforms import PlatformEntity, sensor
-from zha.application.platforms.sensor import DanfossSoftwareErrorCode, UnitOfMass
+from zha.application.platforms.sensor import DanfossSoftwareErrorCode
 from zha.application.platforms.sensor.const import SensorDeviceClass, SensorStateClass
 from zha.units import PERCENTAGE, UnitOfEnergy, UnitOfPressure, UnitOfVolume
 from zha.zigbee.cluster_handlers import AttrReportConfig
